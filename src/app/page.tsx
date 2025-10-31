@@ -7,10 +7,10 @@ import { SecurityIssuesScene } from '@/components/scenes/SecurityIssuesScene';
 import { MetricsAndDiffScene } from '@/components/scenes/MetricsAndDiffScene';
 import { GitHubPrScene } from '@/components/scenes/GitHubPrScene';
 import type { SecurityIssue } from '@/lib/data';
-import { FileCode, RefreshCcw } from 'lucide-react';
+import { RefreshCcw } from 'lucide-react';
 import { GridBackground } from '@/components/ui/grid-background';
 import { Button } from '@/components/ui/button';
-import { securityIssues, scenes as sceneData } from '@/lib/data';
+import { securityIssues } from '@/lib/data';
 import { TimelineControls } from '@/components/ui/timeline-controls';
 
 export type Scene = 'welcome' | 'scan' | 'mapping' | 'issues' | 'metrics' | 'github' | 'done';
@@ -110,12 +110,6 @@ export default function Home() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4 pt-20 pb-40 relative overflow-hidden">
       <GridBackground />
-      <header className="absolute top-0 left-0 w-full p-6 flex items-center justify-between z-10">
-        <div className="flex items-center gap-3">
-          <FileCode className="w-8 h-8 text-accent"/>
-          <h1 className="text-2xl font-bold font-headline">Terraform Pilot</h1>
-        </div>
-      </header>
       
       <div className="w-full h-full flex-grow flex items-center justify-center">
         {renderScene()}
