@@ -26,19 +26,23 @@ export function GitHubPrScene({ onComplete }: GitHubPrSceneProps) {
 
   useEffect(() => {
     setShow(true);
-    const interval = setInterval(() => {
+    const stepInterval = setInterval(() => {
       setStep(prev => (prev < timelineSteps.length -1 ? prev + 1 : prev));
     }, 2000);
 
-    setTimeout(() => {
+    const mergeTimeout = setTimeout(() => {
         setIsMerged(true);
     }, 8000);
 
-    setTimeout(() => {
+    const completeTimeout = setTimeout(() => {
         onComplete();
     }, 10000);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(stepInterval);
+      clearTimeout(mergeTimeout);
+      clearTimeout(completeTimeout);
+    };
   }, [onComplete]);
 
   return (

@@ -70,6 +70,7 @@ export function MetricsAndDiffScene({ issue, onComplete }: MetricsAndDiffScenePr
 
   useEffect(() => {
     setShow(true);
+    let isMounted = true;
     const generateFix = async () => {
       try {
         setIsLoading(true);
@@ -80,12 +81,12 @@ export function MetricsAndDiffScene({ issue, onComplete }: MetricsAndDiffScenePr
         });
         
         await new Promise(resolve => setTimeout(resolve, 500)); // artificial delay
-        setFixedCode(fixResult.fixedTerraformCode);
+        if(isMounted) setFixedCode(fixResult.fixedTerraformCode);
 
         const explanationResult = await explainTerraformFix({
           terraformFix: fixResult.fixedTerraformCode,
         });
-        setExplanation(explanationResult.explanation);
+        if(isMounted) setExplanation(explanationResult.explanation);
 
       } catch (error) {
         console.error('Error generating fix:', error);
@@ -95,13 +96,17 @@ export function MetricsAndDiffScene({ issue, onComplete }: MetricsAndDiffScenePr
           description: 'Could not generate a fix for the issue.',
         });
       } finally {
-        setIsLoading(false);
+        if(isMounted) setIsLoading(false);
       }
     };
     generateFix();
     
     const timer = setTimeout(() => onComplete(), 9000); // Increased duration
-    return () => clearTimeout(timer);
+    
+    return () => {
+      isMounted = false;
+      clearTimeout(timer);
+    };
 
   }, [issue, toast, onComplete]);
 

@@ -25,24 +25,28 @@ export function SecurityIssuesScene({ onComplete, selectedIssue }: SecurityIssue
 
   useEffect(() => {
     setShow(true);
-    securityIssues.forEach((issue, index) => {
-      setTimeout(() => {
+    const timers = securityIssues.map((issue, index) => {
+      return setTimeout(() => {
         setVisibleIssues(prev => [...prev, issue]);
       }, index * 200);
     });
     
-    // Auto-select the issue after a delay
+    let selectTimeout: NodeJS.Timeout;
     if (selectedIssue) {
-        setTimeout(() => {
+        selectTimeout = setTimeout(() => {
             setIsIssueSelected(true);
         }, securityIssues.length * 200 + 1000);
     }
 
-    // Move to next scene
-    setTimeout(() => {
+    const completeTimeout = setTimeout(() => {
         onComplete();
     }, securityIssues.length * 200 + 2500);
 
+    return () => {
+      timers.forEach(clearTimeout);
+      clearTimeout(selectTimeout);
+      clearTimeout(completeTimeout);
+    }
   }, [onComplete, selectedIssue]);
 
 
@@ -52,7 +56,7 @@ export function SecurityIssuesScene({ onComplete, selectedIssue }: SecurityIssue
         <Card className="bg-background/50 backdrop-blur-sm border-border/50 shadow-2xl">
           <CardHeader>
             <CardTitle className="text-2xl font-headline font-semibold">Security Issues Detected</CardTitle>
-            <CardDescription>Click on an issue to see details and generate a fix.</CardDescription>
+            <CardDescription>An issue will be automatically selected to generate a fix.</CardDescription>
           </CardHeader>
           <CardContent className="p-8">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -77,7 +81,7 @@ export function SecurityIssuesScene({ onComplete, selectedIssue }: SecurityIssue
                         isIssueSelected && isTheSelectedIssue ? 'border-accent scale-105 shadow-2xl' : 'hover:-translate-y-2'
                       )}
                     >
-                      {isTheSelectedIssue && <div className="absolute top-0 left-0 w-full h-1 bg-accent animate-pulse" />}
+                      {isTheSelectedIssue && <div className="absolute top-0 left-0 w-full h-1 bg-accent animate-glow" />}
                       <CardHeader className="flex-row items-center gap-4 space-y-0">
                         <issue.Icon className="w-8 h-8" />
                         <CardTitle className="text-lg">{issue.title}</CardTitle>

@@ -60,17 +60,23 @@ export function ResourceMappingScene({ onComplete }: ResourceMappingSceneProps) 
     const totalDuration = 6000;
     const itemDuration = totalDuration / mappedResources.length;
 
-    mappedResources.forEach((_, index) => {
-      setTimeout(() => {
+    const timers = mappedResources.map((_, index) => {
+      return setTimeout(() => {
         setVisibleItems((prev) => [...prev, index]);
       }, index * itemDuration);
     });
 
-    setTimeout(() => {
+    const glowTimeout = setTimeout(() => {
       setFinalGlow(true);
     }, totalDuration);
 
-    setTimeout(onComplete, totalDuration + 2000); // 2s glow
+    const completeTimeout = setTimeout(onComplete, totalDuration + 2000); // 2s glow
+
+    return () => {
+      timers.forEach(clearTimeout);
+      clearTimeout(glowTimeout);
+      clearTimeout(completeTimeout);
+    }
   }, [onComplete]);
 
   return (

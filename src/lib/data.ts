@@ -116,3 +116,13 @@ export const commits = [
 ];
 
 export const timelineSteps = ["Discover", "Map", "Fix", "PR"];
+
+export const scenes = [
+    { id: 'welcome', title: 'Welcome', duration: 4 },
+    { id: 'scan', title: 'AWS Scan', duration: 10 },
+    { id: 'mapping', title: 'Resource Mapping', duration: 8 },
+    { id: 'issues', title: 'Security Issues', duration: 6 },
+    { id: 'metrics', title: 'Analysis & Fix', duration: 12 },
+    { id: 'github', title: 'GitHub PR', duration: 10 },
+    { id: 'done', title: 'Complete', duration: 0 },
+];

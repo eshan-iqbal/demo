@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { AwsResourceScanScene } from '@/components/scenes/AwsResourceScanScene';
 import { ResourceMappingScene } from '@/components/scenes/ResourceMappingScene';
 import { SecurityIssuesScene } from '@/components/scenes/SecurityIssuesScene';
@@ -10,51 +10,66 @@ import type { SecurityIssue } from '@/lib/data';
 import { FileCode, RefreshCcw } from 'lucide-react';
 import { GridBackground } from '@/components/ui/grid-background';
 import { Button } from '@/components/ui/button';
-import { securityIssues } from '@/lib/data';
+import { securityIssues, scenes as sceneData } from '@/lib/data';
+import { TimelineControls } from '@/components/ui/timeline-controls';
 
-type Scene = 'welcome' | 'scan' | 'mapping' | 'issues' | 'metrics' | 'github' | 'done';
+export type Scene = 'welcome' | 'scan' | 'mapping' | 'issues' | 'metrics' | 'github' | 'done';
 
 export default function Home() {
-  const [scene, setScene] = useState<Scene>('welcome');
+  const [currentSceneIndex, setCurrentSceneIndex] = useState(0);
   const [selectedIssue, setSelectedIssue] = useState<SecurityIssue | null>(null);
+  const [isPlaying, setIsPlaying] = useState(true);
 
-  const handleSceneComplete = () => {
-    setScene(currentScene => {
-      switch (currentScene) {
-        case 'welcome':
-          return 'scan';
-        case 'scan':
-          return 'mapping';
-        case 'mapping':
-          // Automatically select the first high-severity issue for the demo
+  const scenes: { key: Scene, duration: number, title: string }[] = [
+    { key: 'welcome', duration: 4000, title: 'Welcome' },
+    { key: 'scan', duration: 8000, title: 'AWS Resource Scan' },
+    { key: 'mapping', duration: 8000, title: 'Resource Mapping' },
+    { key: 'issues', duration: 5000, title: 'Security Issues' },
+    { key: 'metrics', duration: 9000, title: 'Analysis & Fix' },
+    { key: 'github', duration: 10000, title: 'GitHub PR' },
+    { key: 'done', duration: Infinity, title: 'Complete' },
+  ];
+
+  const scene = scenes[currentSceneIndex].key;
+
+  const handleSceneComplete = useCallback(() => {
+    setCurrentSceneIndex(prevIndex => {
+      const nextIndex = prevIndex + 1;
+      if (nextIndex < scenes.length) {
+        if (scenes[nextIndex].key === 'issues') {
           const highSeverityIssue = securityIssues.find(i => i.severity === 'High');
           if (highSeverityIssue) {
             setSelectedIssue(highSeverityIssue);
           }
-          return 'issues';
-        case 'issues':
-           return 'metrics';
-        case 'metrics':
-          return 'github';
-        case 'github':
-          return 'done';
-        default:
-          return 'welcome';
+        }
+        return nextIndex;
       }
+      setIsPlaying(false);
+      return prevIndex;
     });
-  };
+  }, [scenes.length]);
+  
+  useEffect(() => {
+    if (isPlaying && scene !== 'done') {
+      const timer = setTimeout(handleSceneComplete, scenes[currentSceneIndex].duration);
+      return () => clearTimeout(timer);
+    }
+  }, [currentSceneIndex, isPlaying, handleSceneComplete, scene, scenes]);
 
   const restartDemo = () => {
     setSelectedIssue(null);
-    setScene('welcome');
+    setCurrentSceneIndex(0);
+    setIsPlaying(true);
   }
-  
-  useEffect(() => {
-    if (scene === 'welcome') {
-      const timer = setTimeout(handleSceneComplete, 4000);
-      return () => clearTimeout(timer);
+
+  const handleSetScene = (index: number) => {
+    if(index === 0) {
+      restartDemo();
+      return;
     }
-  }, [scene]);
+    setCurrentSceneIndex(index);
+    setIsPlaying(false);
+  }
 
   const renderScene = () => {
     switch (scene) {
@@ -93,7 +108,7 @@ export default function Home() {
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-4 relative overflow-hidden">
+    <main className="flex min-h-screen flex-col items-center justify-center p-4 pt-20 pb-40 relative overflow-hidden">
       <GridBackground />
       <header className="absolute top-0 left-0 w-full p-6 flex items-center justify-between z-10">
         <div className="flex items-center gap-3">
@@ -102,13 +117,20 @@ export default function Home() {
         </div>
       </header>
       
-      <div className="w-full h-[80vh] flex items-center justify-center">
+      <div className="w-full h-full flex-grow flex items-center justify-center">
         {renderScene()}
       </div>
 
-      <footer className="absolute bottom-0 left-0 w-full p-4 text-center text-xs text-muted-foreground z-10">
-        A demo application showcasing automated infrastructure security.
-      </footer>
+      <TimelineControls
+        scenes={scenes}
+        currentSceneIndex={currentSceneIndex}
+        isPlaying={isPlaying}
+        onSetScene={handleSetScene}
+        onPlayPause={() => setIsPlaying(!isPlaying)}
+        onRestart={restartDemo}
+        onNext={() => handleSetScene(Math.min(scenes.length - 1, currentSceneIndex + 1))}
+        onPrev={() => handleSetScene(Math.max(0, currentSceneIndex - 1))}
+      />
     </main>
   );
 }

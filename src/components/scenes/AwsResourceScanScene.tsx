@@ -19,25 +19,33 @@ export function AwsResourceScanScene({ onComplete }: AwsResourceScanSceneProps) 
 
   useEffect(() => {
     setShow(true);
+    const sceneDuration = 8000;
+    
     const progressInterval = setInterval(() => {
       setProgress((prev) => {
-        if (prev >= 100) {
+        const newProgress = prev + 100 / (sceneDuration / 100);
+        if (newProgress >= 100) {
           clearInterval(progressInterval);
           setStatus('Complete');
-          setTimeout(() => onComplete(), 2000);
           return 100;
         }
-        return prev + 1.67; // Fills in ~6s
+        return newProgress;
       });
     }, 100);
 
-    awsResources.forEach((resource, index) => {
-      setTimeout(() => {
+    const discoveryTimers = awsResources.map((resource, index) => {
+      return setTimeout(() => {
         setDiscovered((prev) => [...prev, resource]);
       }, (index + 1) * 1500);
     });
 
-    return () => clearInterval(progressInterval);
+    const completeTimeout = setTimeout(onComplete, sceneDuration);
+
+    return () => {
+      clearInterval(progressInterval);
+      discoveryTimers.forEach(clearTimeout);
+      clearTimeout(completeTimeout);
+    };
   }, [onComplete]);
 
   return (
@@ -69,7 +77,7 @@ export function AwsResourceScanScene({ onComplete }: AwsResourceScanSceneProps) 
                                 isDiscovered ? "opacity-100 translate-x-0 scale-100" : "opacity-0 -translate-x-10 scale-90"
                               )}
                             >
-                                <Card className="p-6 flex flex-col items-center justify-center gap-4 hover:bg-accent/10 transition-colors duration-300">
+                                <Card className="p-6 flex flex-col items-center justify-center gap-4 hover:bg-accent/10 transition-colors duration-300 h-full">
                                 <div className="absolute top-2 right-2 w-3 h-3 rounded-full bg-green-500 animate-pulse" style={{ animationDelay: `${index * 0.2}s` }} />
                                 <div className="p-3 bg-accent/20 rounded-full">
                                     <resource.Icon className="w-8 h-8 text-accent" />
