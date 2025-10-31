@@ -88,10 +88,24 @@ export default {
             height: '0',
           },
         },
+        'glow': {
+          '0%, 100%': { opacity: '1', boxShadow: '0 0 10px hsl(var(--accent))' },
+          '50%': { opacity: '0.7', boxShadow: '0 0 20px hsl(var(--accent)), 0 0 30px hsl(var(--accent))' },
+        },
+        'typewriter': {
+          from: { width: '0' },
+          to: { width: '100%' },
+        },
+        'blink-caret': {
+          'from, to': { borderColor: 'transparent' },
+          '50%': { borderColor: 'hsl(var(--accent))' },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
+        'glow': 'glow 2s ease-in-out infinite',
+        'typewriter': 'typewriter 2s steps(40, end) 1s 1 normal both, blink-caret .75s step-end infinite',
       },
     },
   },
