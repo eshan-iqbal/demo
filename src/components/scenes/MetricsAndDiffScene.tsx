@@ -48,9 +48,9 @@ function CodeDiff({ oldCode, newCode }: { oldCode: string; newCode: string }) {
       </div>
       <div>
         <h3 className="font-semibold mb-2">Suggested Fix</h3>
-        <pre className="p-4 rounded-md bg-green-500/10 text-green-300/80 overflow-x-auto h-64">
+        <pre className="p-4 rounded-md bg-green-500/10 text-green-300/80 overflow-x-auto h-64 animate-code-typewriter">
           {newLines.map((line, i) => (
-            <div key={`new-${i}`} className="flex animate-in fade-in slide-in-from-left-4 duration-500" style={{ animationDelay: `${i * 50}ms` }}>
+            <div key={`new-${i}`} className="flex">
               <span className="w-8 select-none text-right pr-2 opacity-50">{i + 1}</span>
               <code className="flex-1">{line}</code>
             </div>
@@ -73,10 +73,13 @@ export function MetricsAndDiffScene({ issue, onComplete }: MetricsAndDiffScenePr
     const generateFix = async () => {
       try {
         setIsLoading(true);
+        // Stagger the AI calls for a better perceived performance
         const fixResult = await generateTerraformFix({
           securityIssueDescription: issue.description,
           currentTerraformCode: issue.currentTerraformCode,
         });
+        
+        await new Promise(resolve => setTimeout(resolve, 500)); // artificial delay
         setFixedCode(fixResult.fixedTerraformCode);
 
         const explanationResult = await explainTerraformFix({
@@ -97,15 +100,15 @@ export function MetricsAndDiffScene({ issue, onComplete }: MetricsAndDiffScenePr
     };
     generateFix();
     
-    const timer = setTimeout(() => onComplete(), 7000);
+    const timer = setTimeout(() => onComplete(), 9000); // Increased duration
     return () => clearTimeout(timer);
 
   }, [issue, toast, onComplete]);
 
   return (
     <div className={cn("flex flex-col items-center justify-center h-full w-full p-8 text-foreground transition-opacity duration-1000", show ? "opacity-100" : "opacity-0")}>
-      <div className="w-full max-w-6xl animate-in fade-in-0 slide-in-from-bottom-10 duration-1000 space-y-6">
-        <Card className="bg-background/50 backdrop-blur-sm border-border/50 shadow-2xl">
+      <div className="w-full max-w-6xl space-y-6">
+        <Card className="bg-background/50 backdrop-blur-sm border-border/50 shadow-2xl animate-in fade-in-0 slide-in-from-bottom-10 duration-1000">
           <CardHeader>
             <CardTitle className="text-2xl font-headline font-semibold">Analysis & Suggested Fix</CardTitle>
             <CardDescription>{issue.title}</CardDescription>
@@ -125,14 +128,15 @@ export function MetricsAndDiffScene({ issue, onComplete }: MetricsAndDiffScenePr
             </div>
             <div className="animate-in fade-in-0 duration-500 delay-400">
               <h3 className="font-semibold mb-4 flex items-center gap-2"><BrainCircuit className="w-5 h-5 text-accent" /> AI Explanation</h3>
-              {isLoading ? (
+              {isLoading && !explanation ? (
                 <div className="space-y-2 h-full flex flex-col justify-center">
-                  <div className="h-4 bg-muted/20 rounded w-full animate-pulse" />
+                   <div className="h-4 bg-muted/20 rounded w-full animate-pulse" />
                   <div className="h-4 bg-muted/20 rounded w-5/6 animate-pulse" />
                   <div className="h-4 bg-muted/20 rounded w-full animate-pulse" />
+                  <div className="h-4 bg-muted/20 rounded w-4/6 animate-pulse" />
                 </div>
               ) : (
-                <Alert className="h-full">
+                <Alert className="h-full animate-in fade-in duration-500">
                   <Wand2 className="h-4 w-4" />
                   <AlertTitle>Explanation</AlertTitle>
                   <AlertDescription>
@@ -149,8 +153,8 @@ export function MetricsAndDiffScene({ issue, onComplete }: MetricsAndDiffScenePr
             <CardTitle>Code Diff</CardTitle>
           </CardHeader>
           <CardContent>
-            {isLoading ? (
-              <div className="flex items-center justify-center h-48">
+            {isLoading && !fixedCode ? (
+              <div className="flex items-center justify-center h-64">
                 <Loader2 className="w-8 h-8 animate-spin text-accent" />
                 <p className="ml-4">Generating fix...</p>
               </div>

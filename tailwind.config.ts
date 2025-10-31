@@ -100,12 +100,17 @@ export default {
           'from, to': { borderColor: 'transparent' },
           '50%': { borderColor: 'hsl(var(--accent))' },
         },
+        'code-typewriter': {
+          from: { height: '0' },
+          to: { height: '100%' },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
         'glow': 'glow 2s ease-in-out infinite',
         'typewriter': 'typewriter 2s steps(40, end) 1s 1 normal both, blink-caret .75s step-end infinite',
+        'code-typewriter': 'code-typewriter 2s steps(10, end) 1.5s 1 normal both',
       },
     },
   },
