@@ -57,7 +57,7 @@ export function ResourceMappingScene({ onComplete }: ResourceMappingSceneProps) 
 
   useEffect(() => {
     setShow(true);
-    const totalDuration = 10000;
+    const totalDuration = 6000;
     const itemDuration = totalDuration / mappedResources.length;
 
     mappedResources.forEach((_, index) => {
@@ -78,7 +78,7 @@ export function ResourceMappingScene({ onComplete }: ResourceMappingSceneProps) 
       <div className="w-full max-w-6xl animate-in fade-in-0 slide-in-from-bottom-10 duration-1000">
         <Card className="bg-background/50 backdrop-blur-sm border-border/50 shadow-2xl">
           <CardHeader>
-            <CardTitle className="text-2xl font-headline font-semibold">Resource Mapping</CardTitle>lng>
+            <CardTitle className="text-2xl font-headline font-semibold">Resource Mapping</CardTitle>
           </CardHeader>
           <CardContent className="p-8 space-y-12">
             {mappedResources.map((item, index) => {

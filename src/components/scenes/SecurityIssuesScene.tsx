@@ -5,9 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Badge } from '@/components/ui/badge';
 import { securityIssues, type SecurityIssue } from '@/lib/data';
 import { cn } from '@/lib/utils';
+import { CheckCircle } from 'lucide-react';
 
 interface SecurityIssuesSceneProps {
-  onIssueSelect: (issue: SecurityIssue) => void;
+  onComplete: () => void;
+  selectedIssue: SecurityIssue | null;
 }
 
 const severityStyles = {
@@ -16,9 +18,10 @@ const severityStyles = {
   Low: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
 };
 
-export function SecurityIssuesScene({ onIssueSelect }: SecurityIssuesSceneProps) {
+export function SecurityIssuesScene({ onComplete, selectedIssue }: SecurityIssuesSceneProps) {
   const [visibleIssues, setVisibleIssues] = useState<SecurityIssue[]>([]);
   const [show, setShow] = useState(false);
+  const [isIssueSelected, setIsIssueSelected] = useState(false);
 
   useEffect(() => {
     setShow(true);
@@ -27,11 +30,21 @@ export function SecurityIssuesScene({ onIssueSelect }: SecurityIssuesSceneProps)
         setVisibleIssues(prev => [...prev, issue]);
       }, index * 200);
     });
-  }, []);
+    
+    // Auto-select the issue after a delay
+    if (selectedIssue) {
+        setTimeout(() => {
+            setIsIssueSelected(true);
+        }, securityIssues.length * 200 + 1000);
+    }
 
-  const handleIssueClick = (issue: SecurityIssue) => {
-    setTimeout(() => onIssueSelect(issue), 300);
-  };
+    // Move to next scene
+    setTimeout(() => {
+        onComplete();
+    }, securityIssues.length * 200 + 2500);
+
+  }, [onComplete, selectedIssue]);
+
 
   return (
     <div className={cn("flex flex-col items-center justify-center h-full w-full p-8 text-foreground transition-opacity duration-1000", show ? "opacity-100" : "opacity-0")}>
@@ -45,7 +58,7 @@ export function SecurityIssuesScene({ onIssueSelect }: SecurityIssuesSceneProps)
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {securityIssues.map((issue, index) => {
                 const isVisible = visibleIssues.some(i => i.id === issue.id);
-                const isMostSevere = issue.severity === 'High' && index === securityIssues.findIndex(i => i.severity === 'High');
+                const isTheSelectedIssue = selectedIssue?.id === issue.id;
 
                 return (
                   <div
@@ -58,13 +71,13 @@ export function SecurityIssuesScene({ onIssueSelect }: SecurityIssuesSceneProps)
                     style={{ transitionDelay: `${index * 150}ms` }}
                   >
                     <Card
-                      onClick={() => handleIssueClick(issue)}
                       className={cn(
-                        "cursor-pointer group hover:border-accent transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 relative overflow-hidden h-full flex flex-col",
-                        severityStyles[issue.severity]
+                        "group transition-all duration-300 hover:shadow-2xl relative overflow-hidden h-full flex flex-col",
+                        severityStyles[issue.severity],
+                        isIssueSelected && isTheSelectedIssue ? 'border-accent scale-105 shadow-2xl' : 'hover:-translate-y-2'
                       )}
                     >
-                      {isMostSevere && <div className="absolute top-0 left-0 w-full h-1 bg-accent animate-pulse" />}
+                      {isTheSelectedIssue && <div className="absolute top-0 left-0 w-full h-1 bg-accent animate-pulse" />}
                       <CardHeader className="flex-row items-center gap-4 space-y-0">
                         <issue.Icon className="w-8 h-8" />
                         <CardTitle className="text-lg">{issue.title}</CardTitle>
@@ -77,8 +90,13 @@ export function SecurityIssuesScene({ onIssueSelect }: SecurityIssuesSceneProps)
                         <Badge variant="outline" className="font-mono">{issue.scanId}</Badge>
                         <Badge variant="outline" className="font-mono">{issue.policy}</Badge>
                       </CardFooter>
-                       {isMostSevere && (
+                       {isTheSelectedIssue && (
                           <div className="absolute inset-0 bg-gradient-to-t from-accent/0 to-accent/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                       )}
+                       {isIssueSelected && isTheSelectedIssue && (
+                         <div className="absolute inset-0 bg-background/70 backdrop-blur-sm flex items-center justify-center animate-in fade-in-0 duration-500">
+                           <CheckCircle className="w-12 h-12 text-accent" />
+                         </div>
                        )}
                     </Card>
                   </div>

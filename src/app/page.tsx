@@ -10,6 +10,7 @@ import type { SecurityIssue } from '@/lib/data';
 import { FileCode, RefreshCcw } from 'lucide-react';
 import { GridBackground } from '@/components/ui/grid-background';
 import { Button } from '@/components/ui/button';
+import { securityIssues } from '@/lib/data';
 
 type Scene = 'welcome' | 'scan' | 'mapping' | 'issues' | 'metrics' | 'github' | 'done';
 
@@ -17,11 +18,32 @@ export default function Home() {
   const [scene, setScene] = useState<Scene>('welcome');
   const [selectedIssue, setSelectedIssue] = useState<SecurityIssue | null>(null);
 
-  const handleIssueSelect = (issue: SecurityIssue) => {
-    setSelectedIssue(issue);
-    setScene('metrics');
+  const handleSceneComplete = () => {
+    setScene(currentScene => {
+      switch (currentScene) {
+        case 'welcome':
+          return 'scan';
+        case 'scan':
+          return 'mapping';
+        case 'mapping':
+          // Automatically select the first high-severity issue for the demo
+          const highSeverityIssue = securityIssues.find(i => i.severity === 'High');
+          if (highSeverityIssue) {
+            setSelectedIssue(highSeverityIssue);
+          }
+          return 'issues';
+        case 'issues':
+           return 'metrics';
+        case 'metrics':
+          return 'github';
+        case 'github':
+          return 'done';
+        default:
+          return 'welcome';
+      }
+    });
   };
-  
+
   const restartDemo = () => {
     setSelectedIssue(null);
     setScene('welcome');
@@ -29,7 +51,7 @@ export default function Home() {
   
   useEffect(() => {
     if (scene === 'welcome') {
-      const timer = setTimeout(() => setScene('scan'), 4000);
+      const timer = setTimeout(handleSceneComplete, 4000);
       return () => clearTimeout(timer);
     }
   }, [scene]);
@@ -44,16 +66,16 @@ export default function Home() {
           </div>
         );
       case 'scan':
-        return <AwsResourceScanScene onComplete={() => setScene('mapping')} />;
+        return <AwsResourceScanScene onComplete={handleSceneComplete} />;
       case 'mapping':
-        return <ResourceMappingScene onComplete={() => setScene('issues')} />;
+        return <ResourceMappingScene onComplete={handleSceneComplete} />;
       case 'issues':
-        return <SecurityIssuesScene onIssueSelect={handleIssueSelect} />;
+        return <SecurityIssuesScene onComplete={handleSceneComplete} selectedIssue={selectedIssue} />;
       case 'metrics':
         if (!selectedIssue) return null;
-        return <MetricsAndDiffScene issue={selectedIssue} onComplete={() => setScene('github')} />;
+        return <MetricsAndDiffScene issue={selectedIssue} onComplete={handleSceneComplete} />;
       case 'github':
-        return <GitHubPrScene onComplete={() => setScene('done')} />;
+        return <GitHubPrScene onComplete={handleSceneComplete} />;
       case 'done':
         return (
           <div className="flex flex-col items-center justify-center h-full text-center animate-in fade-in-0 duration-1000">
