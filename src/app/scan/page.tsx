@@ -53,14 +53,19 @@ function HubAndSpokeScanner({ onComplete }: { onComplete: () => void }) {
           return prev + 1;
         } else {
           clearInterval(interval);
-          onComplete();
           return prev;
         }
       });
     }, 800);
 
     return () => clearInterval(interval);
-  }, [onComplete]);
+  }, []);
+
+  useEffect(() => {
+    if (scanningService >= services.length - 1) {
+      onComplete();
+    }
+  }, [scanningService, onComplete]);
 
   return (
     <div className="relative flex flex-col items-center justify-center text-center w-[600px] h-[600px]">
@@ -137,12 +142,17 @@ function DigitalStreamScanner({ onComplete }: { onComplete: () => void }) {
           return prev + 1;
         }
         clearInterval(serviceInterval);
-        onComplete();
         return prev;
       });
     }, 1000);
     return () => clearInterval(serviceInterval);
-  }, [onComplete]);
+  }, []);
+
+  useEffect(() => {
+    if (scanningIndex >= streamServices.length - 1) {
+      onComplete();
+    }
+  }, [scanningIndex, onComplete]);
 
   useEffect(() => {
     const streamInterval = setInterval(() => {
