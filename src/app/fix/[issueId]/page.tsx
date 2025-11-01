@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { securityIssues } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Wand2, FileText, CheckCircle, GitPullRequest, UserCheck, GitMerge } from 'lucide-react';
+import { ArrowLeft, Wand2, FileText, GitPullRequest } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 
@@ -46,9 +46,6 @@ export default function FixPage() {
   const [explanation, setExplanation] = useState<string | null>(null);
   const [isFixing, setIsFixing] = useState(false);
   const [isCreatingPr, setIsCreatingPr] = useState(false);
-  const [isPrCreated, setIsPrCreated] = useState(false);
-  const [isMerging, setIsMerging] = useState(false);
-  const [isMerged, setIsMerged] = useState(false);
 
   useEffect(() => {
     const foundIssue = securityIssues.find((i) => i.id === issueId);
@@ -81,15 +78,7 @@ export default function FixPage() {
   const handleCreatePR = async () => {
     setIsCreatingPr(true);
     await new Promise(resolve => setTimeout(resolve, 1000));
-    setIsPrCreated(true);
-    setIsCreatingPr(false);
-  }
-
-  const handleMergePR = async () => {
-    setIsMerging(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setIsMerged(true);
-    setIsMerging(false);
+    router.push(`/pr/${issueId}`);
   }
 
   if (!issue) {
@@ -179,7 +168,7 @@ export default function FixPage() {
                 </CardContent>
             </Card>
 
-            {fixedCode && !isPrCreated && (
+            {fixedCode && (
                  <Card className="animate-[fade-in-up_0.9s_ease-out]">
                      <CardHeader>
                          <CardTitle className="flex items-center gap-2">
@@ -196,39 +185,6 @@ export default function FixPage() {
                          </Button>
                      </CardContent>
                  </Card>
-            )}
-
-            {isPrCreated && !isMerged && (
-                <Card className="animate-[fade-in-up_0.9s_ease-out] bg-blue-900/20 border-blue-500/30">
-                    <CardHeader>
-                         <CardTitle className="flex items-center gap-2 text-blue-300">
-                            <UserCheck />
-                            Review & Approve
-                         </CardTitle>
-                         <CardDescription className="text-blue-400/80">
-                           A pull request has been created. As the repository owner, you can now approve and merge the changes.
-                         </CardDescription>
-                     </CardHeader>
-                     <CardContent>
-                        <Button onClick={handleMergePR} disabled={isMerging} className="w-full bg-blue-600 hover:bg-blue-700">
-                            {isMerging ? 'Merging...' : 'Approve & Merge'}
-                        </Button>
-                     </CardContent>
-                </Card>
-            )}
-
-            {isMerged && (
-                <Card className="bg-green-900/50 border-green-500/50 animate-[fade-in_0.5s_ease-out]">
-                    <CardHeader>
-                         <CardTitle className="flex items-center gap-2 text-green-300">
-                            <GitMerge />
-                            Changes Merged!
-                         </CardTitle>
-                         <CardDescription className="text-green-400/80">
-                           The pull request has been approved and the secure changes are now in the main branch.
-                         </CardDescription>
-                     </CardHeader>
-                </Card>
             )}
           </div>
         </div>
