@@ -98,7 +98,7 @@ const SidebarLogo = () => (
       <ShieldCheck className="w-5 h-5" />
     </div>
     <div className="flex flex-col">
-      <h2 className="text-sm font-semibold">CSPM Tool</h2>
+      <h2 className="text-sm font-semibold">Terraform Pilot</h2>
       <p className="text-xs text-sidebar-foreground/70">Cloud Security</p>
     </div>
   </div>
@@ -108,7 +108,7 @@ export default function DashboardPage() {
   const router = useRouter();
 
   const handleResourceClick = (issueId: string) => {
-    router.push(`/fix/${issueId}`);
+    router.push(`/map/${issueId}`);
   };
 
   return (
@@ -310,15 +310,14 @@ export default function DashboardPage() {
                   </TableHeader>
                   <TableBody>
                     {topVulnerabilities.map((item) => (
-                      <TableRow key={item.id}>
+                      <TableRow key={item.id} className="cursor-pointer hover:bg-muted/50" onClick={() => handleResourceClick(item.id)}>
                         <TableCell>
-                          <Button
-                            variant="link"
-                            className="font-mono p-0 h-auto"
-                            onClick={() => handleResourceClick(item.id)}
+                          <span
+                            
+                            className="font-mono p-0 h-auto text-primary underline-offset-4 hover:underline"
                           >
                             {item.resourceId}
-                          </Button>
+                          </span>
                         </TableCell>
                         <TableCell>{item.service}</TableCell>
                         <TableCell>{item.region}</TableCell>
