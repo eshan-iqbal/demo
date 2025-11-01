@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { securityIssues, MappedResource, awsResources } from '@/lib/data';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowRight, FileText, Loader, Shield } from 'lucide-react';
+import { ArrowRight, FileText, Loader, Shield, Wand2 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { GridBackground } from '@/components/ui/grid-background';
 
 export default function MappingPage() {
@@ -71,14 +72,25 @@ export default function MappingPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="font-mono text-sm">{issue.resourceName}</p>
+            <div className="flex items-center gap-2 mb-2">
+              <p className="font-mono text-sm">{issue.resourceName}</p>
+              {(issueId === 'issue-4' || issueId === 'issue-5') && (
+                <Badge variant="outline" className="border-purple-400/50 text-purple-400 text-xs">
+                  Unmanaged
+                </Badge>
+              )}
+            </div>
             <p className="text-xs text-muted-foreground">{resource.type}</p>
           </CardContent>
         </Card>
 
         {/* Mapping Animation */}
         <div className="flex flex-col items-center justify-center animate-[fade-in_0.5s_0.5s_ease-out_forwards] opacity-0">
-           <p className="text-sm text-muted-foreground mb-2">Mapping to file...</p>
+           <p className="text-sm text-muted-foreground mb-2">
+             {(issueId === 'issue-4' || issueId === 'issue-5') 
+               ? 'Detecting unmanaged resource...' 
+               : 'Mapping to file...'}
+           </p>
            <div className="w-24 h-px bg-border relative">
                 <ArrowRight className="w-5 h-5 text-primary absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 animate-[pulse_2s_infinite]" />
            </div>
@@ -90,8 +102,17 @@ export default function MappingPage() {
             <Card className="animate-[fade-in-left_0.5s_1s_ease-out_forwards] opacity-0">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg">
-                <FileText className="w-6 h-6 text-accent" />
-                Terraform File
+                {(issueId === 'issue-4' || issueId === 'issue-5') ? (
+                  <>
+                    <Wand2 className="w-6 h-6 text-purple-400" />
+                    Will Import to Terraform
+                  </>
+                ) : (
+                  <>
+                    <FileText className="w-6 h-6 text-accent" />
+                    Terraform File
+                  </>
+                )}
                 </CardTitle>
             </CardHeader>
             <CardContent>
@@ -101,6 +122,12 @@ export default function MappingPage() {
                     ? 'Not in Terraform (Unmanaged)' 
                     : 'Infrastructure-as-Code'}
                 </p>
+                {(issueId === 'issue-4' || issueId === 'issue-5') && (
+                  <div className="mt-3 p-2 bg-purple-500/10 border border-purple-500/20 rounded text-xs text-purple-400">
+                    <Wand2 className="w-3 h-3 inline mr-1" />
+                    AI will import this resource
+                  </div>
+                )}
             </CardContent>
             </Card>
         ) : (
