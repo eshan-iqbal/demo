@@ -203,9 +203,10 @@ export default function ScanPage() {
 
   useEffect(() => {
     if (scanComplete) {
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         router.push('/');
       }, 1500);
+      return () => clearTimeout(timer);
     }
   }, [scanComplete, router]);
 
