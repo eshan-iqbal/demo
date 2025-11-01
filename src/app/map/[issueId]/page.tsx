@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { securityIssues, MappedResource, awsResources } from '@/lib/data';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowRight, FileText, Loader } from 'lucide-react';
+import { ArrowRight, FileText, Loader, Shield } from 'lucide-react';
 import { GridBackground } from '@/components/ui/grid-background';
 
 export default function MappingPage() {
@@ -20,7 +20,16 @@ export default function MappingPage() {
     if (foundIssue) {
       setIssue(foundIssue);
       const foundResource = awsResources.find(r => r.name === foundIssue.resourceName);
-      setResource(foundResource);
+      // For unmanaged resources, create a default resource object
+      if (!foundResource) {
+        setResource({
+          name: foundIssue.resourceName,
+          type: foundIssue.resourceType,
+          Icon: Shield
+        });
+      } else {
+        setResource(foundResource);
+      }
       const vulnerableFile = topVulnerabilities.find(v => v.id === issueId)?.file;
       
       setTimeout(() => {
@@ -37,8 +46,8 @@ export default function MappingPage() {
     { id: 'issue-2', file: 'main.tf' },
     { id: 'issue-1', file: 's3.tf' },
     { id: 'issue-3', file: 'db.tf' },
-    { id: 'issue-4', file: 'iam.tf' },
-    { id: 'issue-5', file: 'lambda.tf' },
+    { id: 'issue-4', file: 'security-groups.tf' },
+    { id: 'issue-5', file: 'unmanaged-s3.tf' },
   ];
 
   if (!issue || !resource) {
@@ -87,7 +96,11 @@ export default function MappingPage() {
             </CardHeader>
             <CardContent>
                 <p className="font-mono text-sm">{mappedFile}</p>
-                <p className="text-xs text-muted-foreground">Infrastructure-as-Code</p>
+                <p className="text-xs text-muted-foreground">
+                  {(issueId === 'issue-4' || issueId === 'issue-5') 
+                    ? 'Not in Terraform (Unmanaged)' 
+                    : 'Infrastructure-as-Code'}
+                </p>
             </CardContent>
             </Card>
         ) : (

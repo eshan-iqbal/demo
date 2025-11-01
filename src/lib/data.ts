@@ -92,6 +92,62 @@ description: "The RDS instance 'user-database' does not have encryption at rest 
   storage_encrypted    = false
 }`
   },
+  {
+    id: "issue-4",
+    title: "Unmanaged Security Group - Open SSH",
+    severity: "High",
+    Icon: ShieldAlert,
+    scanId: "scan-xyz-126",
+    policy: "POL-015",
+    resourceName: "sg-0a1b2c3d4e5f6g7h8",
+    resourceType: "Security Group",
+    description: "Security group allows SSH access (port 22) from 0.0.0.0/0. This resource is NOT managed by Terraform.",
+    currentTerraformCode: `# This resource is not managed by Terraform
+# Detected via AWS API scan
+# Security Group: sg-0a1b2c3d4e5f6g7h8
+# Ingress Rule: 0.0.0.0/0 -> Port 22 (SSH)
+
+# Suggested Terraform import and fix:
+resource "aws_security_group" "unmanaged_sg" {
+  name        = "unmanaged-security-group"
+  description = "Previously unmanaged security group"
+  
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]  # VULNERABLE: Open to internet
+  }
+}`,
+  },
+  {
+    id: "issue-5",
+    title: "Unmanaged S3 Bucket - No Versioning",
+    severity: "Medium",
+    Icon: ShieldX,
+    scanId: "scan-xyz-127",
+    policy: "POL-032",
+    resourceName: "legacy-backup-bucket-2023",
+    resourceType: "S3",
+    description: "S3 bucket lacks versioning and lifecycle policies. This resource is NOT managed by Terraform.",
+    currentTerraformCode: `# This resource is not managed by Terraform
+# Detected via AWS API scan
+# Bucket: legacy-backup-bucket-2023
+# Issues: No versioning, no lifecycle policy
+
+# Suggested Terraform import and fix:
+resource "aws_s3_bucket" "legacy_backup" {
+  bucket = "legacy-backup-bucket-2023"
+}
+
+resource "aws_s3_bucket_versioning" "legacy_backup" {
+  bucket = aws_s3_bucket.legacy_backup.id
+  
+  versioning_configuration {
+    status = "Disabled"  # VULNERABLE: Should be Enabled
+  }
+}`,
+  },
 ];
 
 export const commits = [
