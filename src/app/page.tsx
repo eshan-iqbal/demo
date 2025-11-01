@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, Suspense, useCallback } from 'react';
 import {
   Sidebar,
   SidebarContent,
@@ -111,8 +111,7 @@ const SidebarLogo = () => (
   </div>
 );
 
-function Dashboard() {
-  const router = useRouter();
+function Dashboard({ router }: { router: ReturnType<typeof useRouter> }) {
   const searchParams = useSearchParams();
   const fixedIssueId = searchParams.get('fixed');
 
@@ -139,7 +138,7 @@ function Dashboard() {
         setScanningId(null);
         
         // Update metrics
-        setTotalVulns(prev => prev - issueToFix.severity === 'High' ? 12 : 24);
+        setTotalVulns(prev => prev - (issueToFix.severity === 'High' ? 12 : 24));
         setVulnerableResources(prev => prev -1);
         if (issueToFix.severity === 'High') {
             const isS3 = issueToFix.title.includes('S3');
@@ -236,7 +235,7 @@ function Dashboard() {
               <Calendar className="w-4 h-4" />
               <span>Last 24 Hours</span>
             </Button>
-            <Button size="sm" className="gap-2 bg-green-600 hover:bg-green-700">
+            <Button size="sm" className="gap-2 bg-green-600 hover:bg-green-700" onClick={() => router.push('/scan')}>
               <Scan className="w-4 h-4" />
               <span>Scan Now</span>
             </Button>
@@ -432,10 +431,16 @@ function Dashboard() {
   );
 }
 
+
+function DashboardWrapper() {
+    const router = useRouter();
+    return <Dashboard router={router} />;
+}
+
 export default function DashboardPage() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <Dashboard />
+      <DashboardWrapper />
     </Suspense>
   );
 }
