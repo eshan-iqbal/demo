@@ -205,7 +205,7 @@ export default function FixPage() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <FileText />
-                      Vulnerable Code
+                      Misconfigured Resources
                     </CardTitle>
                     <CardDescription>
                       Current Terraform configuration with security misconfiguration.
@@ -227,7 +227,7 @@ export default function FixPage() {
                       ) : (
                         <>
                           <Terminal className="text-green-400" />
-                          CLI Fix Terraform
+                          CLI AI Fix
                         </>
                       )}
                     </CardTitle>
@@ -235,7 +235,7 @@ export default function FixPage() {
                       {!fixedCodes[issue.id] && !currentlyFixing && (
                         (issue.id === 'issue-4' || issue.id === 'issue-5') 
                           ? 'Unmanaged resource - will use AI to import and fix...'
-                          : 'Waiting for CLI Fix to run...'
+                          : 'Waiting for CLI AI Fix to run...'
                       )}
                       {currentlyFixing === issue.id && (
                         (issue.id === 'issue-4' || issue.id === 'issue-5')
@@ -281,7 +281,7 @@ export default function FixPage() {
                           <p className="text-xs text-muted-foreground mt-1">
                             {(issue.id === 'issue-4' || issue.id === 'issue-5')
                               ? 'Running AI Fix...'
-                              : 'Running CLI Fix...'}
+                              : 'Running CLI AI Fix...'}
                           </p>
                         </div>
                       </div>
@@ -295,7 +295,7 @@ export default function FixPage() {
                               ? 'Click "AI Fix" button above - AI will import and fix this unmanaged resource'
                               : (!fixedCodes['issue-4'] && !fixedCodes['issue-5'])
                                 ? 'Waiting for AI Fix to complete first (import unmanaged resources)'
-                                : 'Click "CLI Fix Terraform" button above to fix this managed resource'}
+                                : 'Click "CLI AI Fix" button above to fix this managed resource'}
                           </p>
                         </div>
                       </div>
@@ -360,7 +360,7 @@ export default function FixPage() {
                 className="bg-green-600 hover:bg-green-700"
               >
                 <Terminal className="mr-2 h-5 w-5" />
-                {isFixingCLI ? 'Running CLI Fix...' : 'CLI Fix Terraform'}
+                {isFixingCLI ? 'Running CLI AI Fix...' : 'CLI AI Fix'}
               </Button>
             )}
           </div>
@@ -393,7 +393,7 @@ export default function FixPage() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <FileText />
-                      Vulnerable Code
+                      Misconfigured Resources
                     </CardTitle>
                     <CardDescription>
                       Current Terraform configuration with security misconfiguration.
@@ -415,7 +415,7 @@ export default function FixPage() {
                       ) : (
                         <>
                           <Terminal className="text-green-400" />
-                          CLI Fix Terraform
+                          CLI AI Fix
                         </>
                       )}
                     </CardTitle>
@@ -423,7 +423,7 @@ export default function FixPage() {
                       {!fixedCodes[issue.id] && !currentlyFixing && (
                         (issue.id === 'issue-4' || issue.id === 'issue-5') 
                           ? 'Unmanaged resource - will use AI to import and fix...'
-                          : 'Waiting for CLI Fix to run...'
+                          : 'Waiting for CLI AI Fix to run...'
                       )}
                       {currentlyFixing === issue.id && (
                         (issue.id === 'issue-4' || issue.id === 'issue-5')
@@ -469,7 +469,7 @@ export default function FixPage() {
                           <p className="text-xs text-muted-foreground mt-1">
                             {(issue.id === 'issue-4' || issue.id === 'issue-5')
                               ? 'Running AI Fix...'
-                              : 'Running CLI Fix...'}
+                              : 'Running CLI AI Fix...'}
                           </p>
                         </div>
                       </div>
@@ -483,7 +483,7 @@ export default function FixPage() {
                               ? 'Click "AI Fix" button above - AI will import and fix this unmanaged resource'
                               : (!fixedCodes['issue-4'] && !fixedCodes['issue-5'])
                                 ? 'Waiting for AI Fix to complete first (import unmanaged resources)'
-                                : 'Click "CLI Fix Terraform" button above to fix this managed resource'}
+                                : 'Click "CLI AI Fix" button above to fix this managed resource'}
                           </p>
                         </div>
                       </div>
