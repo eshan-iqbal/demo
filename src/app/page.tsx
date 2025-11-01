@@ -38,13 +38,8 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from '@/components/ui/chart';
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  Cell,
-} from 'recharts';
-import { useToast } from '@/hooks/use-toast';
+import { BarChart, Bar, XAxis, Cell } from 'recharts';
+import { useRouter } from 'next/navigation';
 
 const vulnerabilityData = [
   { name: 'Critical', value: 76, color: 'hsl(var(--destructive))' },
@@ -62,30 +57,34 @@ const serviceData = [
 ];
 
 const topVulnerabilities = [
-  { id: 'i-0123456789abcdef0', service: 'EC2', region: 'us-east-1', count: 24, file: 'main.tf' },
+  { id: 'issue-2', resourceId: 'i-0123456789abcdef0', service: 'EC2', region: 'us-east-1', count: 24, file: 'main.tf' },
   {
-    id: 'my-critical-s3-bucket',
+    id: 'issue-1',
+    resourceId: 'my-critical-s3-bucket',
     service: 'S3',
     region: 'us-west-2',
     count: 18,
-    file: 's3.tf'
+    file: 's3.tf',
   },
   {
-    id: 'rds-db-instance-prod',
+    id: 'issue-3',
+    resourceId: 'rds-db-instance-prod',
     service: 'RDS',
     region: 'eu-central-1',
     count: 12,
-    file: 'db.tf'
+    file: 'db.tf',
   },
   {
-    id: 'arn:aws:iam::123456789012:user/AdminUser',
+    id: 'issue-4',
+    resourceId: 'arn:aws:iam::123456789012:user/AdminUser',
     service: 'IAM',
     region: 'Global',
     count: 9,
     file: 'iam.tf'
   },
   {
-    id: 'my-lambda-function-name',
+    id: 'issue-5',
+    resourceId: 'my-lambda-function-name',
     service: 'Lambda',
     region: 'us-east-1',
     count: 5,
@@ -106,15 +105,12 @@ const SidebarLogo = () => (
 );
 
 export default function DashboardPage() {
-  const { toast } = useToast();
+  const router = useRouter();
 
-  const handleResourceClick = (resourceId: string, fileName: string) => {
-    toast({
-      title: 'Resource Mapped',
-      description: `Resource "${resourceId}" mapped to ${fileName}.`,
-    });
+  const handleResourceClick = (issueId: string) => {
+    router.push(`/fix/${issueId}`);
   };
-  
+
   return (
     <SidebarProvider>
       <Sidebar side="left" variant="sidebar" collapsible="icon">
@@ -243,10 +239,13 @@ export default function DashboardPage() {
                           {item.name}
                         </span>
                         <div className="flex-1 mx-4">
-                           <div className="w-full bg-muted rounded-full h-4">
+                          <div className="w-full bg-muted rounded-full h-4">
                             <div
                               className="h-4 rounded-full"
-                              style={{ width: `${(item.value / 1204) * 100}%`, backgroundColor: item.color }}
+                              style={{
+                                width: `${(item.value / 1204) * 100}%`,
+                                backgroundColor: item.color,
+                              }}
                             />
                           </div>
                         </div>
@@ -263,25 +262,32 @@ export default function DashboardPage() {
                   <CardTitle>Vulnerabilities by AWS Service</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <ChartContainer
-                    config={{}}
-                    className="h-48 w-full"
-                  >
-                    <BarChart data={serviceData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
-                        <XAxis
-                          dataKey="name"
-                          tickLine={false}
-                          axisLine={false}
-                          tickMargin={8}
-                          fontSize={12}
-                        />
-                        <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
-                        <Bar dataKey="value" radius={5}>
-                           {serviceData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill="hsl(var(--foreground))" opacity={entry.value / 100} />
-                          ))}
-                        </Bar>
-                      </BarChart>
+                  <ChartContainer config={{}} className="h-48 w-full">
+                    <BarChart
+                      data={serviceData}
+                      margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
+                    >
+                      <XAxis
+                        dataKey="name"
+                        tickLine={false}
+                        axisLine={false}
+                        tickMargin={8}
+                        fontSize={12}
+                      />
+                      <ChartTooltip
+                        cursor={false}
+                        content={<ChartTooltipContent hideLabel />}
+                      />
+                      <Bar dataKey="value" radius={5}>
+                        {serviceData.map((entry, index) => (
+                          <Cell
+                            key={`cell-${index}`}
+                            fill="hsl(var(--foreground))"
+                            opacity={entry.value / 100}
+                          />
+                        ))}
+                      </Bar>
+                    </BarChart>
                   </ChartContainer>
                 </CardContent>
               </Card>
@@ -306,8 +312,12 @@ export default function DashboardPage() {
                     {topVulnerabilities.map((item) => (
                       <TableRow key={item.id}>
                         <TableCell>
-                          <Button variant="link" className="font-mono p-0 h-auto" onClick={() => handleResourceClick(item.id, item.file)}>
-                            {item.id}
+                          <Button
+                            variant="link"
+                            className="font-mono p-0 h-auto"
+                            onClick={() => handleResourceClick(item.id)}
+                          >
+                            {item.resourceId}
                           </Button>
                         </TableCell>
                         <TableCell>{item.service}</TableCell>
@@ -326,10 +336,14 @@ export default function DashboardPage() {
                 </Table>
                 <div className="flex justify-between items-center pt-4 text-sm text-muted-foreground">
                   <div>Showing 1 to 5 of 89 results</div>
-                   <div className="flex gap-2">
-                      <Button variant="outline" size="sm">Previous</Button>
-                      <Button variant="outline" size="sm">Next</Button>
-                    </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm">
+                      Previous
+                    </Button>
+                    <Button variant="outline" size="sm">
+                      Next
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
