@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { GridBackground } from '@/components/ui/grid-background';
 import {
@@ -197,9 +197,9 @@ export default function ScanPage() {
   const [scanComplete, setScanComplete] = useState(false);
   const [theme, setTheme] = useState<'hub' | 'stream'>('hub');
 
-  const handleScanComplete = () => {
+  const handleScanComplete = useCallback(() => {
     setScanComplete(true);
-  };
+  }, []);
 
   useEffect(() => {
     if (scanComplete) {
@@ -239,5 +239,3 @@ export default function ScanPage() {
     </div>
   );
 }
-
-    
