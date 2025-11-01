@@ -1,5 +1,6 @@
 'use client';
 
+import React, { useState, useEffect, Suspense } from 'react';
 import {
   Sidebar,
   SidebarContent,
@@ -21,6 +22,8 @@ import {
   HelpCircle,
   Scan,
   Calendar,
+  ShieldQuestion,
+  Shield,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -39,16 +42,19 @@ import {
   ChartTooltipContent,
 } from '@/components/ui/chart';
 import { BarChart, Bar, XAxis, Cell } from 'recharts';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { securityIssues } from '@/lib/data';
+import { cn } from '@/lib/utils';
 
-const vulnerabilityData = [
+
+const initialVulnerabilityData = [
   { name: 'Critical', value: 76, color: 'hsl(var(--destructive))' },
   { name: 'High', value: 245, color: 'hsl(38, 92%, 50%)' },
   { name: 'Medium', value: 581, color: 'hsl(48, 96%, 50%)' },
   { name: 'Low', value: 302, color: 'hsl(var(--primary))' },
 ];
 
-const serviceData = [
+const initialServiceData = [
   { name: 'EC2', value: 70 },
   { name: 'S3', value: 65 },
   { name: 'RDS', value: 90 },
@@ -56,7 +62,7 @@ const serviceData = [
   { name: 'Lambda', value: 50 },
 ];
 
-const topVulnerabilities = [
+const initialTopVulnerabilities = [
   { id: 'issue-2', resourceId: 'i-0123456789abcdef0', service: 'EC2', region: 'us-east-1', count: 24, file: 'main.tf' },
   {
     id: 'issue-1',
@@ -92,6 +98,7 @@ const topVulnerabilities = [
   },
 ];
 
+
 const SidebarLogo = () => (
   <div className="flex items-center gap-2 p-2">
     <div className="w-8 h-8 bg-foreground text-background flex items-center justify-center rounded-lg">
@@ -104,12 +111,61 @@ const SidebarLogo = () => (
   </div>
 );
 
-export default function DashboardPage() {
+function Dashboard() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const fixedIssueId = searchParams.get('fixed');
+
+  const [topVulnerabilities, setTopVulnerabilities] = useState(initialTopVulnerabilities);
+  const [vulnerabilityData, setVulnerabilityData] = useState(initialVulnerabilityData);
+  const [totalVulns, setTotalVulns] = useState(1204);
+  const [criticalVulns, setCriticalVulns] = useState(76);
+  const [highVulns, setHighVulns] = useState(245);
+  const [vulnerableResources, setVulnerableResources] = useState(89);
+
+  const [scanningId, setScanningId] = useState<string | null>(null);
+  const [resolvedId, setResolvedId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (fixedIssueId) {
+      const issueToFix = securityIssues.find(i => i.id === fixedIssueId);
+      if (!issueToFix) return;
+
+      setScanningId(fixedIssueId);
+      
+      // Simulate re-scan
+      setTimeout(() => {
+        setResolvedId(fixedIssueId);
+        setScanningId(null);
+        
+        // Update metrics
+        setTotalVulns(prev => prev - issueToFix.severity === 'High' ? 12 : 24);
+        setVulnerableResources(prev => prev -1);
+        if (issueToFix.severity === 'High') {
+            const isS3 = issueToFix.title.includes('S3');
+            setHighVulns(prev => prev - (isS3 ? 18 : 12));
+        }
+        
+        // Remove from list after a delay
+        setTimeout(() => {
+            setTopVulnerabilities(prev => prev.filter(v => v.id !== fixedIssueId));
+        }, 1000);
+
+      }, 2000);
+    }
+  }, [fixedIssueId]);
 
   const handleResourceClick = (issueId: string) => {
     router.push(`/map/${issueId}`);
   };
+
+  const getRowState = (id: string) => {
+    if (scanningId === id) return 'scanning';
+    if (resolvedId === id) return 'resolved';
+    return 'default';
+  }
+  
+  const totalVulnsForBar = vulnerabilityData.reduce((acc, item) => acc + item.value, 0);
 
   return (
     <SidebarProvider>
@@ -194,8 +250,8 @@ export default function DashboardPage() {
                   <CardTitle>Total Vulnerabilities</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-4xl font-bold">1,204</div>
-                  <p className="text-xs text-green-500">+5.2%</p>
+                  <div className="text-4xl font-bold">{totalVulns.toLocaleString()}</div>
+                  <p className="text-xs text-green-500">-1.0%</p>
                 </CardContent>
               </Card>
               <Card>
@@ -203,8 +259,8 @@ export default function DashboardPage() {
                   <CardTitle>Vulnerable Resources</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-4xl font-bold">89</div>
-                  <p className="text-xs text-green-500">+2.1%</p>
+                  <div className="text-4xl font-bold">{vulnerableResources}</div>
+                  <p className="text-xs text-green-500">-1.1%</p>
                 </CardContent>
               </Card>
               <Card>
@@ -212,8 +268,8 @@ export default function DashboardPage() {
                   <CardTitle>Critical Vulnerabilities</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-4xl font-bold text-red-500">76</div>
-                  <p className="text-xs text-red-500">+8.3%</p>
+                  <div className="text-4xl font-bold text-red-500">{criticalVulns}</div>
+                  <p className="text-xs text-green-500">-0%</p>
                 </CardContent>
               </Card>
               <Card>
@@ -221,8 +277,8 @@ export default function DashboardPage() {
                   <CardTitle>High Vulnerabilities</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-4xl font-bold text-orange-500">245</div>
-                  <p className="text-xs text-red-500">+3.0%</p>
+                  <div className="text-4xl font-bold text-orange-500">{highVulns.toLocaleString()}</div>
+                  <p className="text-xs text-green-500">-10.2%</p>
                 </CardContent>
               </Card>
             </div>
@@ -239,11 +295,11 @@ export default function DashboardPage() {
                           {item.name}
                         </span>
                         <div className="flex-1 mx-4">
-                          <div className="w-full bg-muted rounded-full h-4">
+                          <div className="w-full bg-muted rounded-full h-2">
                             <div
-                              className="h-4 rounded-full"
+                              className="h-2 rounded-full transition-all duration-500"
                               style={{
-                                width: `${(item.value / 1204) * 100}%`,
+                                width: `${(item.value / totalVulnsForBar) * 100}%`,
                                 backgroundColor: item.color,
                               }}
                             />
@@ -264,7 +320,7 @@ export default function DashboardPage() {
                 <CardContent>
                   <ChartContainer config={{}} className="h-48 w-full">
                     <BarChart
-                      data={serviceData}
+                      data={initialServiceData}
                       margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
                     >
                       <XAxis
@@ -279,7 +335,7 @@ export default function DashboardPage() {
                         content={<ChartTooltipContent hideLabel />}
                       />
                       <Bar dataKey="value" radius={5}>
-                        {serviceData.map((entry, index) => (
+                        {initialServiceData.map((entry, index) => (
                           <Cell
                             key={`cell-${index}`}
                             fill="hsl(var(--foreground))"
@@ -304,16 +360,19 @@ export default function DashboardPage() {
                       <TableHead>AWS Service</TableHead>
                       <TableHead>Region</TableHead>
                       <TableHead className="text-right">
-                        # of Vulnerabilities
+                        Status
                       </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {topVulnerabilities.map((item) => (
-                      <TableRow key={item.id} className="cursor-pointer hover:bg-muted/50" onClick={() => handleResourceClick(item.id)}>
+                      <TableRow 
+                        key={item.id} 
+                        className={cn("cursor-pointer hover:bg-muted/50 transition-all", getRowState(item.id) === 'resolved' && 'opacity-30')}
+                        onClick={() => getRowState(item.id) === 'default' && handleResourceClick(item.id)}
+                      >
                         <TableCell>
                           <span
-                            
                             className="font-mono p-0 h-auto text-primary underline-offset-4 hover:underline"
                           >
                             {item.resourceId}
@@ -322,19 +381,39 @@ export default function DashboardPage() {
                         <TableCell>{item.service}</TableCell>
                         <TableCell>{item.region}</TableCell>
                         <TableCell className="text-right">
-                          <Badge
-                            variant="destructive"
-                            className="bg-red-500/20 text-red-400"
-                          >
-                            {item.count}
-                          </Badge>
+                          {getRowState(item.id) === 'default' && (
+                            <Badge
+                              variant="destructive"
+                              className="bg-red-500/20 text-red-400"
+                            >
+                              {item.count} issues
+                            </Badge>
+                          )}
+                          {getRowState(item.id) === 'scanning' && (
+                            <Badge
+                              variant="secondary"
+                              className="bg-blue-500/20 text-blue-400"
+                            >
+                              <Scan className="w-3 h-3 mr-1 animate-pulse" />
+                              Re-scanning...
+                            </Badge>
+                          )}
+                          {getRowState(item.id) === 'resolved' && (
+                            <Badge
+                              variant="secondary"
+                              className="bg-green-600/20 text-green-400 border-green-600/30"
+                            >
+                              <ShieldCheck className="w-3 h-3 mr-1" />
+                              Resolved
+                            </Badge>
+                          )}
                         </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
                 <div className="flex justify-between items-center pt-4 text-sm text-muted-foreground">
-                  <div>Showing 1 to 5 of 89 results</div>
+                  <div>Showing 1 to {topVulnerabilities.length} of {vulnerableResources} results</div>
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm">
                       Previous
@@ -350,5 +429,13 @@ export default function DashboardPage() {
         </main>
       </SidebarInset>
     </SidebarProvider>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <Dashboard />
+    </Suspense>
   );
 }

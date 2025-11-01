@@ -18,7 +18,7 @@ export default function VerificationPage() {
     }, 2500);
 
     const timer2 = setTimeout(() => {
-      router.push('/');
+      router.push(`/?fixed=${issueId}`);
     }, 4500);
 
     return () => {
