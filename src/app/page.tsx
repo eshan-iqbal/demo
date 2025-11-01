@@ -1,130 +1,331 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { AwsResourceScanScene } from '@/components/scenes/AwsResourceScanScene';
-import { ResourceMappingScene } from '@/components/scenes/ResourceMappingScene';
-import { SecurityIssuesScene } from '@/components/scenes/SecurityIssuesScene';
-import { MetricsAndDiffScene } from '@/components/scenes/MetricsAndDiffScene';
-import { GitHubPrScene } from '@/components/scenes/GitHubPrScene';
-import type { SecurityIssue } from '@/lib/data';
-import { RefreshCcw } from 'lucide-react';
-import { GridBackground } from '@/components/ui/grid-background';
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarTrigger,
+} from '@/components/ui/sidebar';
+import {
+  Home,
+  ShieldCheck,
+  Package,
+  FileText,
+  Settings,
+  HelpCircle,
+  Scan,
+  Bell,
+  UserCircle,
+  Calendar,
+  ChevronDown,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { securityIssues } from '@/lib/data';
-import { TimelineControls } from '@/components/ui/timeline-controls';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from '@/components/ui/chart';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  ResponsiveContainer,
+  Cell,
+} from 'recharts';
 
-export type Scene = 'welcome' | 'scan' | 'mapping' | 'issues' | 'metrics' | 'github' | 'done';
+const vulnerabilityData = [
+  { name: 'Critical', value: 76, color: 'hsl(var(--destructive))' },
+  { name: 'High', value: 245, color: 'hsl(38, 92%, 50%)' },
+  { name: 'Medium', value: 581, color: 'hsl(48, 96%, 50%)' },
+  { name: 'Low', value: 302, color: 'hsl(var(--primary))' },
+];
 
-export default function Home() {
-  const [currentSceneIndex, setCurrentSceneIndex] = useState(0);
-  const [selectedIssue, setSelectedIssue] = useState<SecurityIssue | null>(null);
-  const [isPlaying, setIsPlaying] = useState(true);
+const serviceData = [
+  { name: 'EC2', value: 70 },
+  { name: 'S3', value: 65 },
+  { name: 'RDS', value: 90 },
+  { name: 'IAM', value: 95 },
+  { name: 'Lambda', value: 50 },
+];
 
-  const scenes: { key: Scene, duration: number, title: string }[] = [
-    { key: 'welcome', duration: 4000, title: 'Welcome' },
-    { key: 'scan', duration: 8000, title: 'AWS Resource Scan' },
-    { key: 'mapping', duration: 8000, title: 'Resource Mapping' },
-    { key: 'issues', duration: 5000, title: 'Security Issues' },
-    { key: 'metrics', duration: 9000, title: 'Analysis & Fix' },
-    { key: 'github', duration: 10000, title: 'GitHub PR' },
-    { key: 'done', duration: Infinity, title: 'Complete' },
-  ];
+const topVulnerabilities = [
+  { id: 'i-0123456789abcdef0', service: 'EC2', region: 'us-east-1', count: 24 },
+  {
+    id: 'my-critical-s3-bucket',
+    service: 'S3',
+    region: 'us-west-2',
+    count: 18,
+  },
+  {
+    id: 'rds-db-instance-prod',
+    service: 'RDS',
+    region: 'eu-central-1',
+    count: 12,
+  },
+  {
+    id: 'arn:aws:iam::123456789012:user/AdminUser',
+    service: 'IAM',
+    region: 'Global',
+    count: 9,
+  },
+  {
+    id: 'my-lambda-function-name',
+    service: 'Lambda',
+    region: 'us-east-1',
+    count: 5,
+  },
+];
 
-  const scene = scenes[currentSceneIndex].key;
+const SidebarLogo = () => (
+  <div className="flex items-center gap-2 p-2">
+    <div className="w-8 h-8 bg-foreground text-background flex items-center justify-center rounded-lg">
+      <ShieldCheck className="w-5 h-5" />
+    </div>
+    <div className="flex flex-col">
+      <h2 className="text-sm font-semibold">CSPM Tool</h2>
+      <p className="text-xs text-sidebar-foreground/70">Cloud Security</p>
+    </div>
+  </div>
+);
 
-  const handleSceneComplete = useCallback(() => {
-    setCurrentSceneIndex(prevIndex => {
-      const nextIndex = prevIndex + 1;
-      if (nextIndex < scenes.length) {
-        if (scenes[nextIndex].key === 'issues') {
-          const highSeverityIssue = securityIssues.find(i => i.severity === 'High');
-          if (highSeverityIssue) {
-            setSelectedIssue(highSeverityIssue);
-          }
-        }
-        return nextIndex;
-      }
-      setIsPlaying(false);
-      return prevIndex;
-    });
-  }, [scenes.length]);
-  
-  useEffect(() => {
-    if (isPlaying && scene !== 'done') {
-      const timer = setTimeout(handleSceneComplete, scenes[currentSceneIndex].duration);
-      return () => clearTimeout(timer);
-    }
-  }, [currentSceneIndex, isPlaying, handleSceneComplete, scene, scenes]);
-
-  const restartDemo = () => {
-    setSelectedIssue(null);
-    setCurrentSceneIndex(0);
-    setIsPlaying(true);
-  }
-
-  const handleSetScene = (index: number) => {
-    if(index === 0) {
-      restartDemo();
-      return;
-    }
-    setCurrentSceneIndex(index);
-    setIsPlaying(false);
-  }
-
-  const renderScene = () => {
-    switch (scene) {
-      case 'welcome':
-        return (
-          <div className="text-center animate-in fade-in-0 zoom-in-95 duration-1000">
-            <h1 className="text-5xl font-bold">Welcome to Terraform Pilot</h1>
-            <p className="text-xl text-muted-foreground mt-4">Automating infrastructure security, one commit at a time.</p>
+export default function DashboardPage() {
+  return (
+    <SidebarProvider>
+      <Sidebar side="left" variant="sidebar" collapsible="icon">
+        <SidebarHeader>
+          <SidebarLogo />
+        </SidebarHeader>
+        <SidebarContent>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton tooltip="Dashboard" isActive>
+                <Home />
+                <span>Dashboard</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton tooltip="Vulnerabilities">
+                <ShieldCheck />
+                <span>Vulnerabilities</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton tooltip="Resources">
+                <Package />
+                <span>Resources</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton tooltip="Reports">
+                <FileText />
+                <span>Reports</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton tooltip="Settings">
+                <Settings />
+                <span>Settings</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarContent>
+        <SidebarGroup className="mt-auto !p-0">
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton tooltip="Help & Support">
+                <HelpCircle />
+                <span>Help & Support</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
+      </Sidebar>
+      <SidebarInset>
+        <header className="flex h-14 items-center justify-between gap-4 border-b bg-background px-6">
+          <div className="flex items-center gap-4">
+            <SidebarTrigger className="md:hidden" />
+            <div>
+              <h1 className="text-lg font-semibold md:text-xl">
+                AWS Security Posture Overview
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                Welcome back, here&apos;s a summary of your cloud environment.
+              </p>
+            </div>
           </div>
-        );
-      case 'scan':
-        return <AwsResourceScanScene onComplete={handleSceneComplete} />;
-      case 'mapping':
-        return <ResourceMappingScene onComplete={handleSceneComplete} />;
-      case 'issues':
-        return <SecurityIssuesScene onComplete={handleSceneComplete} selectedIssue={selectedIssue} />;
-      case 'metrics':
-        if (!selectedIssue) return null;
-        return <MetricsAndDiffScene issue={selectedIssue} onComplete={handleSceneComplete} />;
-      case 'github':
-        return <GitHubPrScene onComplete={handleSceneComplete} />;
-      case 'done':
-        return (
-          <div className="flex flex-col items-center justify-center h-full text-center animate-in fade-in-0 duration-1000">
-            <h1 className="text-4xl font-bold mb-4">Demo Complete</h1>
-            <p className="text-xl text-muted-foreground mb-8">Terraform Pilot has successfully secured your infrastructure.</p>
-            <Button onClick={restartDemo}>
-              <RefreshCcw className="mr-2 h-4 w-4" />
-              Restart Demo
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" className="gap-2">
+              <Calendar className="w-4 h-4" />
+              <span>Last 24 Hours</span>
+            </Button>
+            <Button size="sm" className="gap-2 bg-green-600 hover:bg-green-700">
+              <Scan className="w-4 h-4" />
+              <span>Scan Now</span>
             </Button>
           </div>
-        );
-      default:
-        return null;
-    }
-  };
-
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-4 pt-20 pb-40 relative overflow-hidden">
-      <GridBackground />
-      
-      <div className="w-full h-full flex-grow flex items-center justify-center">
-        {renderScene()}
-      </div>
-
-      <TimelineControls
-        scenes={scenes}
-        currentSceneIndex={currentSceneIndex}
-        isPlaying={isPlaying}
-        onSetScene={handleSetScene}
-        onPlayPause={() => setIsPlaying(!isPlaying)}
-        onRestart={restartDemo}
-        onNext={() => handleSetScene(Math.min(scenes.length - 1, currentSceneIndex + 1))}
-        onPrev={() => handleSetScene(Math.max(0, currentSceneIndex - 1))}
-      />
-    </main>
+        </header>
+        <main className="flex-1 overflow-auto p-6">
+          <div className="grid gap-6">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Total Vulnerabilities</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-4xl font-bold">1,204</div>
+                  <p className="text-xs text-green-500">+5.2%</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Vulnerable Resources</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-4xl font-bold">89</div>
+                  <p className="text-xs text-green-500">+2.1%</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Critical Vulnerabilities</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-4xl font-bold text-red-500">76</div>
+                  <p className="text-xs text-red-500">+8.3%</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle>High Vulnerabilities</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-4xl font-bold text-orange-500">245</div>
+                  <p className="text-xs text-red-500">+3.0%</p>
+                </CardContent>
+              </Card>
+            </div>
+            <div className="grid gap-6 lg:grid-cols-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Vulnerabilities by Severity</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {vulnerabilityData.map((item) => (
+                      <div key={item.name} className="flex items-center">
+                        <span className="w-16 text-sm text-muted-foreground">
+                          {item.name}
+                        </span>
+                        <div className="flex-1 mx-4">
+                           <div className="w-full bg-muted rounded-full h-4">
+                            <div
+                              className="h-4 rounded-full"
+                              style={{ width: `${(item.value / 1204) * 100}%`, backgroundColor: item.color }}
+                            />
+                          </div>
+                        </div>
+                        <span className="w-12 text-sm font-medium text-right">
+                          {item.value}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Vulnerabilities by AWS Service</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ChartContainer
+                    config={{}}
+                    className="h-48 w-full"
+                  >
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={serviceData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                        <XAxis
+                          dataKey="name"
+                          tickLine={false}
+                          axisLine={false}
+                          tickMargin={8}
+                          fontSize={12}
+                        />
+                        <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+                        <Bar dataKey="value" radius={5}>
+                           {serviceData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill="hsl(var(--foreground))" opacity={entry.value / 100} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </ChartContainer>
+                </CardContent>
+              </Card>
+            </div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Top Vulnerable Resources</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Resource ID</TableHead>
+                      <TableHead>AWS Service</TableHead>
+                      <TableHead>Region</TableHead>
+                      <TableHead className="text-right">
+                        # of Vulnerabilities
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {topVulnerabilities.map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell className="font-mono">{item.id}</TableCell>
+                        <TableCell>{item.service}</TableCell>
+                        <TableCell>{item.region}</TableCell>
+                        <TableCell className="text-right">
+                          <Badge
+                            variant="destructive"
+                            className="bg-red-500/20 text-red-400"
+                          >
+                            {item.count}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+                <div className="flex justify-between items-center pt-4 text-sm text-muted-foreground">
+                  <div>Showing 1 to 5 of 89 results</div>
+                   <div className="flex gap-2">
+                      <Button variant="outline" size="sm">Previous</Button>
+                      <Button variant="outline" size="sm">Next</Button>
+                    </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </main>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }
