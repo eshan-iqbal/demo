@@ -349,7 +349,7 @@ function Dashboard({ router }: { router: ReturnType<typeof useRouter> }) {
             </div>
             <Card>
               <CardHeader>
-                <CardTitle>Top Vulnerable Resources</CardTitle>
+                <CardTitle>Top Misconfigurations</CardTitle>
               </CardHeader>
               <CardContent>
                 <Table>
@@ -444,3 +444,5 @@ export default function DashboardPage() {
     </Suspense>
   );
 }
+
+    
