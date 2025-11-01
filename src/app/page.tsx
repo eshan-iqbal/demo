@@ -4,7 +4,6 @@ import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarInset,
   SidebarMenu,
@@ -21,10 +20,7 @@ import {
   Settings,
   HelpCircle,
   Scan,
-  Bell,
-  UserCircle,
   Calendar,
-  ChevronDown,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -46,10 +42,9 @@ import {
   BarChart,
   Bar,
   XAxis,
-  YAxis,
-  ResponsiveContainer,
   Cell,
 } from 'recharts';
+import { useToast } from '@/hooks/use-toast';
 
 const vulnerabilityData = [
   { name: 'Critical', value: 76, color: 'hsl(var(--destructive))' },
@@ -67,30 +62,34 @@ const serviceData = [
 ];
 
 const topVulnerabilities = [
-  { id: 'i-0123456789abcdef0', service: 'EC2', region: 'us-east-1', count: 24 },
+  { id: 'i-0123456789abcdef0', service: 'EC2', region: 'us-east-1', count: 24, file: 'main.tf' },
   {
     id: 'my-critical-s3-bucket',
     service: 'S3',
     region: 'us-west-2',
     count: 18,
+    file: 's3.tf'
   },
   {
     id: 'rds-db-instance-prod',
     service: 'RDS',
     region: 'eu-central-1',
     count: 12,
+    file: 'db.tf'
   },
   {
     id: 'arn:aws:iam::123456789012:user/AdminUser',
     service: 'IAM',
     region: 'Global',
     count: 9,
+    file: 'iam.tf'
   },
   {
     id: 'my-lambda-function-name',
     service: 'Lambda',
     region: 'us-east-1',
     count: 5,
+    file: 'lambda.tf'
   },
 ];
 
@@ -107,6 +106,15 @@ const SidebarLogo = () => (
 );
 
 export default function DashboardPage() {
+  const { toast } = useToast();
+
+  const handleResourceClick = (resourceId: string, fileName: string) => {
+    toast({
+      title: 'Resource Mapped',
+      description: `Resource "${resourceId}" mapped to ${fileName}.`,
+    });
+  };
+  
   return (
     <SidebarProvider>
       <Sidebar side="left" variant="sidebar" collapsible="icon">
@@ -259,8 +267,7 @@ export default function DashboardPage() {
                     config={{}}
                     className="h-48 w-full"
                   >
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={serviceData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                    <BarChart data={serviceData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
                         <XAxis
                           dataKey="name"
                           tickLine={false}
@@ -275,7 +282,6 @@ export default function DashboardPage() {
                           ))}
                         </Bar>
                       </BarChart>
-                    </ResponsiveContainer>
                   </ChartContainer>
                 </CardContent>
               </Card>
@@ -299,7 +305,11 @@ export default function DashboardPage() {
                   <TableBody>
                     {topVulnerabilities.map((item) => (
                       <TableRow key={item.id}>
-                        <TableCell className="font-mono">{item.id}</TableCell>
+                        <TableCell>
+                          <Button variant="link" className="font-mono p-0 h-auto" onClick={() => handleResourceClick(item.id, item.file)}>
+                            {item.id}
+                          </Button>
+                        </TableCell>
                         <TableCell>{item.service}</TableCell>
                         <TableCell>{item.region}</TableCell>
                         <TableCell className="text-right">
